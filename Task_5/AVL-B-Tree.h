@@ -5,43 +5,68 @@
 #include <iostream>
 #include <queue>
 #include "Tools.h"
+#include "BinaryFIle.h"
 
 
 using namespace std;
 
 
-class BTree {
+class BTree 
+{
 
     friend class BTreePrinter;
 
 private:
-    struct TreeNode {
-        string* keys;
-        int t;
-        TreeNode** C;
+
+    struct TreeNode 
+    {
+
+        struct NodeCell 
+        {
+            string key;
+            size_t index;
+
+            NodeCell()
+            {
+                this->key = "00.00";
+                this->index = 0;
+            }
+
+            NodeCell(string k, size_t i)
+            {
+                this->key = k;
+                this->index = i;
+            }
+        };
+
+        friend class BTree;
+
+        NodeCell* keyCells;
+        int T;
+        TreeNode** childrens;
         int size;
-        bool leaf;
+        bool isLeaf;
 
         TreeNode(int, bool);
-
-        void insertNotFull(string );
-
-        void splitChild(int, TreeNode* );
 
         TreeNode* get(string);
 
 		void remove(string);
 		
     private:
+        void insertNotFull(string, size_t);
+		
         int findKeyIndex(string);
 
 		void removeFromLeaf(int);
 
 		void removeFromNonLeaf(int);
 
-		string getPred(int);
+        void splitChild(int, TreeNode*);
 
-		string getSucc(int);
+		NodeCell getPredecessor(int);
+
+		NodeCell getSuccessor(int);
 
 		void fill(int);
 
@@ -53,20 +78,25 @@ private:
 	};
 
     TreeNode* root;
-    int t;
+    int T;
+
 
 public:
-    BTree(int temp) {
+    BTree(int treeParameter) 
+    {
         root = NULL;
-        t = temp;
+        T = treeParameter;
+    }
+
+    BTree()
+    {
+        root = NULL;
+        T = 2;
     }
 	
+    size_t find(string);
 
-    TreeNode* get(string k) {
-        return (root == NULL) ? NULL : root->get(k);
-    }
-
-    void insert(string k);
+    void add(string k, size_t i);
 
     void remove(string k);
 };
@@ -80,6 +110,7 @@ private:
 
 public:
     BTreePrinter(BTree* tree) : tree(tree) {}
+    BTreePrinter() {}
 
     void print()
     {
@@ -99,18 +130,35 @@ private:
             int i;
             for (i = 0; i < current->size; i++)
             {
-                if (current->leaf == false)
+                if (current->isLeaf == false)
                 {
                     comparisonCount++;
-                    queue.push(current->C[i]);
+                    queue.push(current->childrens[i]);
                 }
-                cout << " " << current->keys[i] << endl;
+                cout << " " << current->keyCells[i].key << " " << current->keyCells[i].index << endl;
             }
-            if (current->leaf == false)
+            if (current->isLeaf == false)
             {
                 comparisonCount++;
-                queue.push(current->C[i]);
+                queue.push(current->childrens[i]);
             }
         }
     }
+};
+
+
+class BTreeManager
+{
+private:
+    BTree tree;
+    BinaryFile* file;
+    BTreePrinter printer;
+
+public:
+    BTreeManager(BinaryFile*, int);
+
+    void add(char[], size_t);
+    void remove(char[]);
+    string find(char[]);
+    void print();
 };

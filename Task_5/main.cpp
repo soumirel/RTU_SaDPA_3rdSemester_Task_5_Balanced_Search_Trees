@@ -47,14 +47,25 @@ void main()
 		{
 			string fileName = "fileName";
 			file = new BinaryFile(fileName);
+			cout << "Содержимое файла\n";
 			file->print();
 			cout << "-------------------\n";
-			BinarySearchTree tree(file);
+			BinaryTreeManager tree(file);
+			cout << "Дерево:\n";
 			tree.print();
 			cout << "-------------------\n";
+			cout << "Удаление элемента 23.04\n";
 			char key[6] = "23.04";
 			tree.remove(key);
+			cout << "Дерево:\n";
 			tree.print();
+			cout << "-------------------\n";
+			cout << "Поиск элемента 12.02\n";
+			strcpy_s(key, "12.02");
+			cout << "Прямым доступом\n";
+			cout << tree.find(key) << endl;
+			cout << "Линейным поиском\n";
+			cout << file->find(key) << '\n';
 			break;
 		}
 
@@ -62,33 +73,26 @@ void main()
 		{
 			string fileName = "fileName";
 			file = new BinaryFile(fileName);
+			cout << "Содержимое файла";
 			file->print();
 			cout << "-------------------\n";
-			BTree t(3);
-			t.insert("11.11");
-			t.insert("10.06");
-			t.insert("31.02");
-			t.insert("14.03");
-			t.insert("12.11");
-			t.insert("11.06");
-			t.insert("30.02");
-			t.insert("15.03");
-
-			string k = "31.02";
-			(t.get(k) != NULL) ? cout << endl
-				<< k << " найдено"
-				: cout << endl
-				<< k << " не найдено";
-			
-			t.remove("31.02");
-
-			(t.get(k) != NULL) ? cout << endl
-				<< k << " найдено"
-				: cout << endl
-				<< k << " не найдено\n";
-
-			BTreePrinter printer(&t);
-			printer.print();
+			BTreeManager tree(file, 3);
+			cout << "Дерево\n";
+			tree.print();
+			cout << "-------------------\n";
+			cout << "Удаление элемента 23.04\n";
+			char key[6] = "23.04";
+			tree.remove(key);
+			cout << "Дерево:\n";
+			tree.print();
+			cout << "-------------------\n";
+			cout << "Поиск элемента 12.02\n";
+			strcpy_s(key, "12.02");
+			cout << "Прямым доступом\n";
+			cout << tree.find(key) << endl;
+			cout << "Линейным поиском\n";
+			cout << file->find(key) << '\n';
+			break;
 			break;
 		}
 

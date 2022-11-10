@@ -32,7 +32,7 @@ size_t BinaryFile::getSize()
 }
 
 
-const char* BinaryFile::find(char* key)
+string BinaryFile::find(char* key)
 {
 	openFile();
 	
@@ -44,7 +44,7 @@ const char* BinaryFile::find(char* key)
 	{
 		if (strcmp(birthday.key_date, key) == 0)
 		{
-			return birthday.name;
+			return (string)birthday.name;
 		}
 	}
 
@@ -54,7 +54,7 @@ const char* BinaryFile::find(char* key)
 }
 
 
-const char* BinaryFile::at(size_t index)
+string BinaryFile::at(size_t index)
 {
 	openFile();
 	
@@ -72,11 +72,11 @@ const char* BinaryFile::at(size_t index)
 
 	closeFile();
 
-	return birthday.name;	
+	return (string)birthday.name;
 }
 
 
-const char* BinaryFile::keyAt(size_t index)
+string BinaryFile::keyAt(size_t index)
 {
 	openFile();
 
@@ -92,7 +92,7 @@ const char* BinaryFile::keyAt(size_t index)
 	if (file.read((char*)&birthday, sizeof(Birthday)))
 	{
 		closeFile();
-		return birthday.key_date;
+		return (string)birthday.key_date;
 	}
 
 	closeFile();

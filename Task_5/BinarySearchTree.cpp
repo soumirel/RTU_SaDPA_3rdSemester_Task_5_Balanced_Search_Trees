@@ -5,21 +5,48 @@
 int keyCmp(const char* left, const char* right);
 
 
-BinarySearchTree::BinarySearchTree()
+BinaryTreeManager::BinaryTreeManager(BinaryFile* file)
 {
-	root = nullptr;
+	this->file = file;
+	tree = BinarySearchTree();
+	int size = this->file->getSize();
+	char currentKey[6];
+
+	for (int i = 0; i < size; i++)
+	{
+		strcpy_s(currentKey, this->file->keyAt(i).c_str());
+		tree.add(currentKey, i);
+	}
 }
 
 
-BinarySearchTree::BinarySearchTree(BinaryFile* file)
+void BinaryTreeManager::add(char key[], size_t index)
+{
+	tree.add(key, index);
+}
+
+
+void BinaryTreeManager::remove(char key[])
+{
+	tree.remove(key);
+}
+
+
+string BinaryTreeManager::find(char key[])
+{	
+	return file->at(tree.find(key));	
+}
+
+
+void BinaryTreeManager::print()
+{
+	tree.print();
+}
+
+
+BinarySearchTree::BinarySearchTree()
 {
 	root = nullptr;
-	char currentKey[6];
-	for (size_t i = 0; i < file->getSize(); i++)
-	{
-		strcpy_s(currentKey, file->keyAt(i));
-		add(currentKey, i);
-	}
 }
 
 

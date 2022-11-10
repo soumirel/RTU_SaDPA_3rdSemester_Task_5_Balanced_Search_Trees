@@ -1,111 +1,170 @@
 #include "AVL-B-Tree.h"
 
 
-BTree::TreeNode::TreeNode(int t1, bool leaf1) {
-    t = t1;
-    leaf = leaf1;
+BTreeManager::BTreeManager(BinaryFile* file, int T)
+{
+	this->file = file;
+	tree = BTree(T);
+	printer = BTreePrinter(&tree);
+	int size = this->file->getSize();
+	char currentKey[6];
 
-    keys = new string[2 * t - 1];
-    C = new TreeNode * [2 * t];
+	for (int i = 0; i < size; i++)
+	{
+		strcpy_s(currentKey, this->file->keyAt(i).c_str());
+		tree.add(currentKey, i);
+	}
+}
+
+
+void BTreeManager::add(char key[], size_t index)
+{
+	tree.add(key, index);
+}
+
+
+void BTreeManager::remove(char key[])
+{
+	tree.remove(key);
+}
+
+
+string BTreeManager::find(char key[])
+{
+	return file->at(tree.find(key));
+}
+
+
+void BTreeManager::print()
+{
+	printer.print();
+}
+
+
+BTree::TreeNode::TreeNode(int t, bool leaf) {
+    T = t;
+    isLeaf = leaf;
+
+    keyCells = new NodeCell[2 * T - 1];
+    childrens = new TreeNode * [2 * T];
 
     size = 0;
 }
 
 
-BTree::TreeNode* BTree::TreeNode::get(string k) {
-    int i = 0;
-    while (i < size && keyCmp(k, keys[i]) > 0)
-        i++;
-
-    if (keyCmp(keys[i], k) == 0)
-        return this;
-
-    if (leaf == true)
-        return NULL;
-
-    return C[i]->get(k);
+size_t BTree::find(string k)
+{
+	BTree::TreeNode* node = root->get(k);
+	for (int i = 0; i < node->size; i++)
+	{
+		if (keyCmp(k, node->keyCells[i].key) == 0)
+		{
+			return node->keyCells[i].index;
+		}
+	}
 }
 
-void BTree::insert(string k) {
+
+BTree::TreeNode* BTree::TreeNode::get(string k) 
+{
+    int i = 0;
+    while (i < size && keyCmp(k, keyCells[i].key) > 0)
+        i++;
+
+    if (keyCmp(keyCells[i].key, k) == 0)
+        return this;
+
+    if (isLeaf == true)
+        return NULL;
+
+    return childrens[i]->get(k);
+}
+
+void BTree::add(string k, size_t ind) 
+{
     if (root == NULL) {
-        root = new TreeNode(t, true);
-        root->keys[0] = k;
+        root = new TreeNode(T, true);
+        root->keyCells[0] = 
+			BTree::TreeNode::NodeCell(k, ind);
         root->size = 1;
     }
     else {
-        if (root->size == 2 * t - 1) {
-            TreeNode* s = new TreeNode(t, false);
+        if (root->size == 2 * T - 1) {
+            TreeNode* s = new TreeNode(T, false);
 
-            s->C[0] = root;
+            s->childrens[0] = root;
             s->splitChild(0, root);
 
             int i = 0;
-            if (keyCmp(s->keys[0], k) < 0)
+            if (keyCmp(s->keyCells[0].key, k) < 0)
                 i++;
-            s->C[i]->insertNotFull(k);
+            s->childrens[i]->insertNotFull(k, ind);
 
             root = s;
         }
         else
-            root->insertNotFull(k);
+            root->insertNotFull(k, ind);
     }
 }
 
 
-void BTree::TreeNode::insertNotFull(string k) {
+void BTree::TreeNode::insertNotFull(string k, size_t ind) 
+{
     int i = size - 1;
 
-    if (leaf == true) {
-        while (i >= 0 && keyCmp(keys[i], k) > 0) {
-            keys[i + 1] = keys[i];
+    if (isLeaf == true) {
+        while (i >= 0 && keyCmp(keyCells[i].key, k) > 0) {
+            keyCells[i + 1] = keyCells[i];
             i--;
         }
 
-        keys[i + 1] = k;
+        keyCells[i + 1] = BTree::TreeNode::NodeCell(k, ind);
         size = size + 1;
     }
     else {
-        while (i >= 0 && keyCmp(keys[i], k) > 0)
+        while (i >= 0 && keyCmp(keyCells[i].key, k) > 0)
             i--;
 
-        if (C[i + 1]->size == 2 * t - 1) {
-            splitChild(i + 1, C[i + 1]);
+        if (childrens[i + 1]->size == 2 * T - 1) {
+            splitChild(i + 1, childrens[i + 1]);
 
-            if (keyCmp(keys[i + 1], k) < 0)
+            if (keyCmp(keyCells[i + 1].key, k) < 0)
                 i++;
         }
-        C[i + 1]->insertNotFull(k);
+        childrens[i + 1]->insertNotFull(k, ind);
     }
 }
 
 
-void BTree::TreeNode::splitChild(int i, TreeNode* y) {
-    TreeNode* z = new TreeNode(y->t, y->leaf);
-    z->size = t - 1;
+void BTree::TreeNode::splitChild(int i, TreeNode* y) 
+{
+    TreeNode* z = new TreeNode(y->T, y->isLeaf);
+    z->size = T - 1;
 
-    for (int j = 0; j < t - 1; j++)
-        z->keys[j] = y->keys[j + t];
+    for (int j = 0; j < T - 1; j++)
+        z->keyCells[j] = y->keyCells[j + T];
 
-    if (y->leaf == false) {
-        for (int j = 0; j < t; j++)
-            z->C[j] = y->C[j + t];
+    if (y->isLeaf == false) {
+        for (int j = 0; j < T; j++)
+            z->childrens[j] = y->childrens[j + T];
     }
 
-    y->size = t - 1;
+    y->size = T - 1;
     for (int j = size; j >= i + 1; j--)
-        C[j + 1] = C[j];
+        childrens[j + 1] = childrens[j];
 
-    C[i + 1] = z;
+    childrens[i + 1] = z;
 
     for (int j = size - 1; j >= i; j--)
-        keys[j + 1] = keys[j];
+        keyCells[j + 1] = keyCells[j];
 
-    keys[i] = y->keys[t - 1];
+    keyCells[i] = y->keyCells[T - 1];
     size = size + 1;
 }
 
 
-void BTree::remove(string k) {
+void BTree::remove(string k) 
+{
 	if (!root) 
 	{
 		cout << "Удаление невозможно. Дерево пусто" << endl;
@@ -116,22 +175,23 @@ void BTree::remove(string k) {
 
 	if (root->size == 0) {
 		TreeNode* tmp = root;
-		if (root->leaf)
+		if (root->isLeaf)
 			root = NULL;
 		else
-			root = root->C[0];
+			root = root->childrens[0];
 
 		delete tmp;
 	}
 }
 
 
-void BTree::TreeNode::remove(string k) {
+void BTree::TreeNode::remove(string k) 
+{
 	int index = findKeyIndex(k);
 
-	if (index < size && keyCmp(keys[index], k) == 0) 
+	if (index < size && keyCmp(keyCells[index].key, k) == 0) 
 	{
-		if (leaf)
+		if (isLeaf)
 		{
 			removeFromLeaf(index);
 		}
@@ -141,7 +201,7 @@ void BTree::TreeNode::remove(string k) {
 		}
 	}
 	else {
-		if (leaf) 
+		if (isLeaf) 
 		{
 			cout << "Ключа " << k << " нет в дереве" << endl;
 			return;
@@ -149,18 +209,18 @@ void BTree::TreeNode::remove(string k) {
 
 		bool flag = ((index == size) ? true : false);
 
-		if (C[index]->size < t)
+		if (childrens[index]->size < T)
 		{
 			fill(index);
 		}
 
 		if (flag && index > size)
 		{
-			C[index - 1]->remove(k);
+			childrens[index - 1]->remove(k);
 		}
 		else
 		{
-			C[index]->remove(k);
+			childrens[index]->remove(k);
 		}
 	}
 }
@@ -169,7 +229,7 @@ void BTree::TreeNode::remove(string k) {
 int BTree::TreeNode::findKeyIndex(string k)
 {
 	int index = 0;
-	while (index < size && keyCmp(keys[index], k) < 0)
+	while (index < size && keyCmp(keyCells[index].key, k) < 0)
 	{
 		++index;
 	}
@@ -182,7 +242,7 @@ void BTree::TreeNode::removeFromLeaf(int index)
 {
 	for (int i = index + 1; i < size; ++i)
 	{
-		keys[i - 1] = keys[i];
+		keyCells[i - 1] = keyCells[i];
 	}	
 
 	size--;
@@ -191,58 +251,58 @@ void BTree::TreeNode::removeFromLeaf(int index)
 
 void BTree::TreeNode::removeFromNonLeaf(int index) 
 {
-	string k = keys[index];
+	string k = keyCells[index].key;
 
-	if (C[index]->size >= t) 
+	if (childrens[index]->size >= T) 
 	{
-		string pred = getPred(index);
-		keys[index] = pred;
-		C[index]->remove(pred);
+		NodeCell pred = getPredecessor(index);
+		keyCells[index] = pred;
+		childrens[index]->remove(pred.key);
 	}
-	else if (C[index + 1]->size >= t) 
+	else if (childrens[index + 1]->size >= T) 
 	{
-		string succ = getSucc(index);
-		keys[index] = succ;
-		C[index + 1]->remove(succ);
+		NodeCell succ = getSuccessor(index);
+		keyCells[index] = succ;
+		childrens[index + 1]->remove(succ.key);
 	}
 	else {
 		merge(index);
-		C[index]->remove(k);
+		childrens[index]->remove(k);
 	}
 }
 
 
-string BTree::TreeNode::getPred(int index) 
+BTree::TreeNode::NodeCell BTree::TreeNode::getPredecessor(int index) 
 {
-	TreeNode* cur = C[index];
-	while (!cur->leaf)
+	TreeNode* cur = childrens[index];
+	while (!cur->isLeaf)
 	{
-		cur = cur->C[cur->size];
+		cur = cur->childrens[cur->size];
 	}
 		
-	return cur->keys[cur->size - 1];
+	return cur->keyCells[cur->size - 1];
 }
 
 
-string BTree::TreeNode::getSucc(int index) 
+BTree::TreeNode::NodeCell BTree::TreeNode::getSuccessor(int index)
 {
-	TreeNode* cur = C[index + 1];
-	while (!cur->leaf)
+	TreeNode* cur = childrens[index + 1];
+	while (!cur->isLeaf)
 	{
-		cur = cur->C[0];
+		cur = cur->childrens[0];
 	}
 
-	return cur->keys[0];
+	return cur->keyCells[0];
 }
 
 
 void BTree::TreeNode::fill(int index) 
 {
-	if (index != 0 && C[index - 1]->size >= t)
+	if (index != 0 && childrens[index - 1]->size >= T)
 	{
 		borrowFromPrev(index);
 	}	
-	else if (index != size && C[index + 1]->size >= t)
+	else if (index != size && childrens[index + 1]->size >= T)
 	{
 		borrowFromNext(index);
 	}
@@ -260,32 +320,32 @@ void BTree::TreeNode::fill(int index)
 }
 
 
-void BTree::TreeNode::borrowFromPrev(int inedx) 
+void BTree::TreeNode::borrowFromPrev(int index) 
 {
-	TreeNode* child = C[inedx];
-	TreeNode* sibling = C[inedx - 1];
+	TreeNode* child = childrens[index];
+	TreeNode* sibling = childrens[index - 1];
 
 	for (int i = child->size - 1; i >= 0; --i)
 	{
-		child->keys[i + 1] = child->keys[i];
+		child->keyCells[i + 1] = child->keyCells[i];
 	}		
 
-	if (!child->leaf) 
+	if (!child->isLeaf) 
 	{
 		for (int i = child->size; i >= 0; --i)
 		{
-			child->C[i + 1] = child->C[i];
+			child->childrens[i + 1] = child->childrens[i];
 		}			
 	}
 
-	child->keys[0] = keys[inedx - 1];
+	child->keyCells[0] = keyCells[index - 1];
 
-	if (!child->leaf)
+	if (!child->isLeaf)
 	{
-		child->C[0] = sibling->C[sibling->size];
+		child->childrens[0] = sibling->childrens[sibling->size];
 	}
 
-	keys[inedx - 1] = sibling->keys[sibling->size - 1];
+	keyCells[index - 1] = sibling->keyCells[sibling->size - 1];
 
 	child->size++;
 	sibling->size--;
@@ -294,28 +354,28 @@ void BTree::TreeNode::borrowFromPrev(int inedx)
 
 void BTree::TreeNode::borrowFromNext(int index) 
 {
-	TreeNode* child = C[index];
-	TreeNode* sibling = C[index + 1];
+	TreeNode* child = childrens[index];
+	TreeNode* sibling = childrens[index + 1];
 
-	child->keys[(child->size)] = keys[index];
+	child->keyCells[(child->size)] = keyCells[index];
 
-	if (!(child->leaf))
+	if (!(child->isLeaf))
 	{
-		child->C[(child->size) + 1] = sibling->C[0];
+		child->childrens[(child->size) + 1] = sibling->childrens[0];
 	}
 
-	keys[index] = sibling->keys[0];
+	keyCells[index] = sibling->keyCells[0];
 
 	for (int i = 1; i < sibling->size; ++i)
 	{
-		sibling->keys[i - 1] = sibling->keys[i];
+		sibling->keyCells[i - 1] = sibling->keyCells[i];
 	}
 
-	if (!sibling->leaf) 
+	if (!sibling->isLeaf) 
 	{
 		for (int i = 1; i <= sibling->size; ++i)
 		{
-			sibling->C[i - 1] = sibling->C[i];
+			sibling->childrens[i - 1] = sibling->childrens[i];
 		}
 	}
 
@@ -326,32 +386,32 @@ void BTree::TreeNode::borrowFromNext(int index)
 
 void BTree::TreeNode::merge(int index) 
 {
-	TreeNode* child = C[index];
-	TreeNode* sibling = C[index + 1];
+	TreeNode* child = childrens[index];
+	TreeNode* sibling = childrens[index + 1];
 
-	child->keys[t - 1] = keys[index];
+	child->keyCells[T - 1] = keyCells[index];
 
 	for (int i = 0; i < sibling->size; ++i)
 	{
-		child->keys[i + t] = sibling->keys[i];
+		child->keyCells[i + T] = sibling->keyCells[i];
 	}
 
-	if (!child->leaf) 
+	if (!child->isLeaf) 
 	{
 		for (int i = 0; i <= sibling->size; ++i)
 		{
-			child->C[i + t] = sibling->C[i];
+			child->childrens[i + T] = sibling->childrens[i];
 		}
 	}
 
 	for (int i = index + 1; i < size; ++i)
 	{
-		keys[i - 1] = keys[i];
+		keyCells[i - 1] = keyCells[i];
 	}
 
 	for (int i = index + 2; i <= size; ++i)
 	{
-		C[i - 1] = C[i];
+		childrens[i - 1] = childrens[i];
 	}
 
 	child->size += sibling->size + 1;

@@ -3,18 +3,17 @@
 #include "BinaryFile.h"
 #include <memory>
 
+
 class BinarySearchTree
 {
 public:
 	BinarySearchTree();
 
-	BinarySearchTree(BinaryFile* file);
+	void add(char[], size_t);
 
-	void add(char key[], size_t indexInFile);
+	size_t find(const char*);
 
-	size_t find(const char* key);
-
-	void remove(const char* key);
+	void remove(const char*);
 
 	void print();
 	
@@ -37,8 +36,24 @@ private:
 
 	Node* root;
 
-	void add(Node* node);
+	void add(Node*);
 
-	void print(Node* node, size_t level);
+	void print(Node*, size_t);
+};
+
+
+class BinaryTreeManager
+{
+private:
+	BinarySearchTree tree;
+	BinaryFile* file;
+
+public:
+	BinaryTreeManager(BinaryFile*);
+
+	void add(char[], size_t);
+	void remove(char[]);
+	string find(char[]);
+	void print();
 };
 

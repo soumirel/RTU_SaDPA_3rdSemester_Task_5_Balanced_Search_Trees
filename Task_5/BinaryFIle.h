@@ -15,11 +15,11 @@ public:
 
 	size_t getSize();
 
-	const char* find(char* key);
+	string find(char* key);
 
-	const char* at(size_t index);
+	string at(size_t index);
 
-	const char* keyAt(size_t index);
+	string keyAt(size_t index);
 
 	void add(const char* key,
 		const char* value,
