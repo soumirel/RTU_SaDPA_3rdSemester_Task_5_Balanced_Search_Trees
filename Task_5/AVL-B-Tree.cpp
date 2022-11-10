@@ -98,17 +98,17 @@ void BTree::add(string k, size_t ind)
             int i = 0;
             if (keyCmp(s->keyCells[0].key, k) < 0)
                 i++;
-            s->childrens[i]->insertNotFull(k, ind);
+            s->childrens[i]->insert(k, ind);
 
             root = s;
         }
         else
-            root->insertNotFull(k, ind);
+            root->insert(k, ind);
     }
 }
 
 
-void BTree::TreeNode::insertNotFull(string k, size_t ind) 
+void BTree::TreeNode::insert(string k, size_t ind) 
 {
     int i = size - 1;
 
@@ -131,7 +131,7 @@ void BTree::TreeNode::insertNotFull(string k, size_t ind)
             if (keyCmp(keyCells[i + 1].key, k) < 0)
                 i++;
         }
-        childrens[i + 1]->insertNotFull(k, ind);
+        childrens[i + 1]->insert(k, ind);
     }
 }
 
@@ -207,14 +207,14 @@ void BTree::TreeNode::remove(string k)
 			return;
 		}
 
-		bool flag = ((index == size) ? true : false);
+		bool isNodeFull = ((index == size) ? true : false);
 
 		if (childrens[index]->size < T)
 		{
 			fill(index);
 		}
 
-		if (flag && index > size)
+		if (isNodeFull && index > size)
 		{
 			childrens[index - 1]->remove(k);
 		}

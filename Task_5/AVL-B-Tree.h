@@ -54,7 +54,7 @@ private:
 		void remove(string);
 		
     private:
-        void insertNotFull(string, size_t);
+        void insert(string, size_t);
 		
         int findKeyIndex(string);
 
@@ -110,7 +110,7 @@ private:
 
 public:
     BTreePrinter(BTree* tree) : tree(tree) {}
-    BTreePrinter() {}
+    BTreePrinter() { tree = new BTree(); }
 
     void print()
     {
